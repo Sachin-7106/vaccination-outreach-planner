@@ -1,6 +1,18 @@
 def generate_recommendation_reason(area_dict, scored_item, objective):
     """
-    Generates a structured human-readable breakdown explaining why an area was selected.
+    Generates a 100% explainable human-readable breakdown for clinical decision support.
+
+    Why this function exists:
+      AI/algorithmic recommendations must be fully transparent to clinical reviewers and public health
+      officers to establish accountability, prevent black-box decision bias, and satisfy audit compliance.
+
+    Parameters:
+      - area_dict (dict): Raw demographic, risk, and accessibility indicators for the target zone.
+      - scored_item (dict): Scoring output containing priority_score, rank, and objective type.
+      - objective (str): Selected planning objective (RISK_REDUCTION, MAX_REACH, or HISTORICAL_BASELINE).
+
+    Returns:
+      - Dictionary containing plain-language summary narrative, factor score breakdown, and snapshot metrics.
     """
     elig = area_dict.get("eligible_population", 0)
     vacc = area_dict.get("vaccinated_count", 0)
@@ -14,6 +26,7 @@ def generate_recommendation_reason(area_dict, scored_item, objective):
 
     factors_breakdown = []
 
+    # Structure objective-specific factor weights and qualitative impact labels
     if objective == "RISK_REDUCTION":
         factors_breakdown = [
             {"factor": "Emerging Risk Spike", "value": f"{risk:.2f}", "impact": "High Priority" if risk > 0.7 else "Moderate"},

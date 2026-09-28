@@ -15,6 +15,10 @@ from app.planner.explainability import generate_recommendation_reason
 router = APIRouter(prefix="/planner", tags=["Planner"])
 
 def fetch_enriched_areas_data(db: Session):
+    """
+    Joins Area entities with historical service records, surveillance risk signals,
+    and transit mobility indicators to construct complete candidate feature vectors.
+    """
     areas = db.query(Area).all()
     areas_data = []
     for area in areas:
@@ -42,6 +46,16 @@ def fetch_enriched_areas_data(db: Session):
 
 @router.post("/generate", response_model=List[RecommendationResponse])
 def generate_outreach_plan(req: PlanRequest, db: Session = Depends(get_db)):
+    """
+    Generates a targeted seasonal outreach plan for the specified objective.
+
+    Process Flow:
+      1. Aggregates zone indicators across database tables.
+      2. Computes priority scores using the selected planner engine (BASELINE, REACH, or RISK).
+      3. Evaluates hard/soft operational constraints (travel limits, session supply cap).
+      4. Generates 100% explainable human-readable factor score breakdowns.
+      5. Persists recommendation records to SQLite database for audit and human review.
+    """
     areas_data = fetch_enriched_areas_data(db)
     area_lookup = {a["area_id"]: a for a in areas_data}
 
@@ -52,8 +66,7 @@ def generate_outreach_plan(req: PlanRequest, db: Session = Depends(get_db)):
     else:  # RISK_REDUCTION (default)
         scored = calculate_risk_scores(areas_data, v_risk=req.risk_weight_risk, v_gap=req.risk_weight_gap, v_mobility=req.risk_weight_mobility, v_pop=req.risk_weight_pop)
 
-    # Persist or refresh recommendations in DB
-    # Clear old recommendations for this period & objective
+    # Refresh recommendations for the requested planning period and objective
     db.query(Recommendation).filter(
         Recommendation.planning_period == req.planning_period,
         Recommendation.objective == req.objective
@@ -108,6 +121,12 @@ def generate_outreach_plan(req: PlanRequest, db: Session = Depends(get_db)):
 
 @router.post("/compare", response_model=List[PlanComparisonResponse])
 def compare_objectives(req: PlanRequest, db: Session = Depends(get_db)):
+    """
+    Computes a side-by-side comparison matrix across all three planning engines.
+
+    Allows clinical decision-makers to visualize rank shifts (e.g. how high-risk zones
+    ranked low in historical baselines are elevated by the Emerging Risk Engine).
+    """
     areas_data = fetch_enriched_areas_data(db)
 
     baseline_scored = {x["area_id"]: x for x in calculate_baseline_scores(areas_data)}
@@ -136,9 +155,9 @@ def compare_objectives(req: PlanRequest, db: Session = Depends(get_db)):
             historical_demand=area["historical_demand"],
             emerging_risk=area["emerging_risk"],
             eligible_population=area["eligible_population"],
-            rank_difference=b_rank - k_rank  # positive means risk engine ranked it higher!
+            rank_difference=b_rank - k_rank  # Positive rank_difference indicates risk engine prioritized zone higher
         ))
 
-    # Sort by emerging risk rank
+    # Sort comparison table by emerging risk rank
     comparison.sort(key=lambda x: x.risk_rank if x.risk_rank else 99)
     return comparison

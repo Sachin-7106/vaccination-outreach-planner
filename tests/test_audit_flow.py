@@ -1,19 +1,15 @@
 import pytest
-from app.core.database import Base, engine, SessionLocal
-from app.models.schema import Recommendation, Review, Area
+from app.models.schema import Recommendation, Review
 from app.api.reviews import submit_review
 from app.models.pydantic_models import ReviewRequest
 from fastapi import HTTPException
 
-@pytest.fixture
-def db_session():
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    yield db
-    db.close()
-
 def test_override_requires_justification(db_session):
-    # Setup dummy recommendation
+    """
+    Verifies that overriding a recommendation without documented justification (> 5 chars)
+    raises an HTTP 400 exception, while providing a valid reason succeeds and updates state.
+    """
+    # Setup candidate recommendation with hard constraint failure
     rec = Recommendation(
         recommendation_id="REC-TEST-99",
         area_id="AREA-01",
@@ -40,8 +36,9 @@ def test_override_requires_justification(db_session):
     with pytest.raises(HTTPException) as exc_info:
         submit_review(req_invalid, db_session)
     assert exc_info.value.status_code == 400
+    assert "justification" in exc_info.value.detail.lower()
 
-    # Submit valid override with mandatory reason
+    # Submit valid override with mandatory justification
     req_valid = ReviewRequest(
         recommendation_id="REC-TEST-99",
         reviewer_id="Test.Reviewer",
@@ -52,3 +49,11 @@ def test_override_requires_justification(db_session):
     resp = submit_review(req_valid, db_session)
     assert resp.decision == "OVERRIDDEN"
     assert resp.override_reason == "Authorized secondary mobile transit bus allocated"
+
+    # Verify database persistence
+    db_rec = db_session.query(Recommendation).filter_by(recommendation_id="REC-TEST-99").first()
+    assert db_rec.status == "OVERRIDDEN"
+
+    db_review = db_session.query(Review).filter_by(recommendation_id="REC-TEST-99").first()
+    assert db_review is not None
+    assert db_review.reviewer_id == "Test.Reviewer"

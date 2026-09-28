@@ -1,6 +1,21 @@
 def compute_evaluation_metrics(recommendations_list, num_sessions, session_capacity):
     """
-    Computes measurable performance metrics for a generated outreach plan.
+    Computes empirical performance metrics for a generated outreach plan.
+
+    Why this function exists:
+      Allows public health planners to quantitatively compare different planning models
+      (Historical Baseline vs Maximum Reach vs Emerging Risk Reduction) on key KPIs:
+      - Eligible population reached
+      - Supply capacity utilization rate
+      - Unmet eligible demand
+      - Risk-weighted population coverage
+      - Fleet travel feasibility rate
+
+    Formulae:
+      - Total Capacity Allocated = num_sessions * session_capacity
+      - Session Utilization Rate = (total_reach / total_capacity) * 100
+      - Risk-Weighted Coverage = Sum(expected_reach * emerging_risk) / total_reach
+      - Travel Feasibility Rate = (hard_constraint_passed_count / num_sessions) * 100
     """
     if not recommendations_list or num_sessions <= 0:
         return {
@@ -21,17 +36,18 @@ def compute_evaluation_metrics(recommendations_list, num_sessions, session_capac
     utilisation = (total_reach / total_capacity * 100) if total_capacity > 0 else 0.0
     reached_per_session = total_reach / num_sessions
 
+    # Count how many selected zones satisfy all operational hard constraints without requiring human override
     feasible_count = sum(1 for rec in top_recs if rec["hard_constraint_passed"])
     feasibility_rate = (feasible_count / len(top_recs) * 100) if top_recs else 100.0
 
-    # Risk-weighted coverage
+    # Risk-weighted coverage: measures whether allocated doses target high-risk epicenters
     risk_sum = 0.0
     for rec in top_recs:
         snap = rec["reason"]["metrics_snapshot"]
         risk_sum += rec["expected_reach"] * snap["emerging_risk"]
     risk_weighted_score = (risk_sum / total_reach) if total_reach > 0 else 0.0
 
-    # Unmet demand across selected areas
+    # Calculate remaining unserved vulnerable population across target zones
     total_unmet = sum(rec["reason"]["metrics_snapshot"]["unvaccinated_count"] - rec["expected_reach"] for rec in top_recs)
 
     return {
@@ -47,8 +63,8 @@ def compute_evaluation_metrics(recommendations_list, num_sessions, session_capac
 
 def get_error_analysis_scenarios():
     """
-    Returns 4 structured edge/failure modes where automated planners struggle,
-    with consequences and mitigations for human review.
+    Returns 4 structured algorithmic failure mode walkthroughs demonstrating real-world conditions
+    where purely automated statistical ranking struggles, justifying the necessity of human review.
     """
     return [
         {

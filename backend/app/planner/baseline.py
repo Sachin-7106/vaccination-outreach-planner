@@ -2,10 +2,19 @@ import numpy as np
 
 def calculate_baseline_scores(areas_data):
     """
-    Historical Average Baseline:
-    Priority Score = Historical Demand / Eligible Population
-    Allocates outreach purely based on past session attendance history.
+    Historical Average Baseline Model:
+    
+    Calculates priority scores based on past session attendance history relative
+    to eligible population. Serves as the benchmark model to demonstrate how
+    legacy historical allocation policies miss emerging disease spikes.
+    
+    Mathematical Formulation:
+      Raw Score = Historical Demand / Eligible Population
+      Normalized Score = Min-Max Normalization to scale values into [0.0, 1.0]
     """
+    if not areas_data:
+        return []
+
     scores = []
     for item in areas_data:
         elig = item["eligible_population"]

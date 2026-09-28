@@ -24,3 +24,47 @@ def test_capacity_cap_constraint():
     # Planned reach scaled down to remaining unvaccinated (100)
     assert reach == 100
     assert any(f["code"] == "SOFT_LIMITED_UNVACCINATED_POOL" for f in flags)
+
+def test_soft_low_accessibility_constraint():
+    area = {
+        "eligible_population": 3000,
+        "vaccinated_count": 1000,
+        "accessibility_index": 0.42,  # < 0.50
+        "distance_from_base_km": 4.0
+    }
+    hard_passed, flags, reach = evaluate_constraints(area, session_capacity=300, max_travel_distance_km=12.0)
+    assert hard_passed is True
+    assert any(f["code"] == "SOFT_LOW_ACCESSIBILITY" for f in flags)
+
+def test_soft_high_mobility_corridor_constraint():
+    area = {
+        "eligible_population": 4000,
+        "vaccinated_count": 2000,
+        "accessibility_index": 0.90,
+        "mobility_index": 0.94,  # > 0.85
+        "distance_from_base_km": 5.0
+    }
+    hard_passed, flags, reach = evaluate_constraints(area, session_capacity=300, max_travel_distance_km=12.0)
+    assert hard_passed is True
+    assert any(f["code"] == "SOFT_HIGH_MOBILITY_CORRIDOR" for f in flags)
+
+def test_soft_low_historical_attendance_constraint():
+    area = {
+        "eligible_population": 4000,
+        "vaccinated_count": 1000,
+        "historical_demand": 95,  # < 120
+        "distance_from_base_km": 5.0
+    }
+    hard_passed, flags, reach = evaluate_constraints(area, session_capacity=300, max_travel_distance_km=12.0)
+    assert hard_passed is True
+    assert any(f["code"] == "SOFT_LOW_HISTORICAL_ATTENDANCE" for f in flags)
+
+def test_zero_unvaccinated_pool():
+    area = {
+        "eligible_population": 1000,
+        "vaccinated_count": 1000,  # 100% vaccinated
+        "distance_from_base_km": 5.0
+    }
+    hard_passed, flags, reach = evaluate_constraints(area, session_capacity=300, max_travel_distance_km=12.0)
+    assert hard_passed is True
+    assert reach == 0
