@@ -72,6 +72,26 @@ def db_session(test_engine):
         )
         session.add(mobility)
 
+    # Seed demo users for auth testing
+    from app.models.schema import User
+    from app.core.auth import get_password_hash
+    session.add(User(
+        user_id="usr-admin-test",
+        username="admin",
+        hashed_password=get_password_hash("AdminPass123!"),
+        role="ADMIN",
+        full_name="System Administrator",
+        is_active=True
+    ))
+    session.add(User(
+        user_id="usr-clinician-test",
+        username="clinician",
+        hashed_password=get_password_hash("ClinicianPass123!"),
+        role="CLINICIAN",
+        full_name="Dr. Sarah Chen",
+        is_active=True
+    ))
+
     session.commit()
 
     try:
@@ -91,3 +111,16 @@ def client(db_session):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+@pytest.fixture(scope="function")
+def admin_headers(client):
+    res = client.post("/api/auth/login", json={"username": "admin", "password": "AdminPass123!"})
+    token = res.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+@pytest.fixture(scope="function")
+def clinician_headers(client):
+    res = client.post("/api/auth/login", json={"username": "clinician", "password": "ClinicianPass123!"})
+    token = res.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+

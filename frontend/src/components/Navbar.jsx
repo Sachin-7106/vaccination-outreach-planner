@@ -1,14 +1,7 @@
 import React from 'react';
-import { Shield, Activity, MapPin, Calendar, CheckSquare, BarChart3, UserCheck, BookOpen } from 'lucide-react';
+import { Shield, Activity, MapPin, Calendar, CheckSquare, BarChart3, UserCheck, BookOpen, Key } from 'lucide-react';
 
-export default function Navbar({ activePage, setActivePage, activeRole, setActiveRole }) {
-  const roles = [
-    { id: 'PLANNER', label: 'Public Health Planner', badge: 'Planner' },
-    { id: 'COORDINATOR', label: 'Outreach Coordinator', badge: 'Operations' },
-    { id: 'CLINICIAN', label: 'Clinician / Authorised Reviewer', badge: 'Approval Auth' },
-    { id: 'COMMUNITY_REP', label: 'Under-Served Population Rep', badge: 'Advocate' }
-  ];
-
+export default function Navbar({ activePage, setActivePage, activeUser, onSwitchUser }) {
   return (
     <header style={{
       backgroundColor: 'var(--bg-card)',
@@ -55,7 +48,7 @@ export default function Navbar({ activePage, setActivePage, activeRole, setActiv
                 color: 'var(--accent-blue)',
                 fontWeight: 700
               }}>
-                DEMO / SYNTHETIC DATA ONLY
+                100% FINAL / FORMAL ILP + RBAC
               </span>
             </div>
           </div>
@@ -99,20 +92,32 @@ export default function Navbar({ activePage, setActivePage, activeRole, setActiv
           })}
         </nav>
 
-        {/* Role Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <UserCheck size={16} style={{ color: 'var(--accent-teal)' }} />
+        {/* Auth / Role Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.25rem 0.6rem',
+            borderRadius: 'var(--radius-md)',
+            background: activeUser?.role === 'ADMIN' ? 'rgba(225, 29, 72, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            border: activeUser?.role === 'ADMIN' ? '1px solid rgba(225, 29, 72, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+            color: activeUser?.role === 'ADMIN' ? 'var(--accent-rose)' : 'var(--accent-emerald)',
+            fontSize: '0.78rem',
+            fontWeight: 700
+          }}>
+            <Key size={14} />
+            <span>{activeUser ? `${activeUser.role}` : 'AUTH'}</span>
+          </div>
+
           <select
-            value={activeRole}
-            onChange={(e) => setActiveRole(e.target.value)}
+            value={activeUser?.role || 'CLINICIAN'}
+            onChange={(e) => onSwitchUser(e.target.value)}
             className="form-select"
-            style={{ fontSize: '0.8rem', padding: '0.35rem 0.65rem' }}
+            style={{ fontSize: '0.8rem', padding: '0.35rem 0.65rem', cursor: 'pointer' }}
           >
-            {roles.map(r => (
-              <option key={r.id} value={r.id}>
-                {r.label} ({r.badge})
-              </option>
-            ))}
+            <option value="CLINICIAN">Clinician Account (Sarah Chen)</option>
+            <option value="ADMIN">Admin Account (Director System)</option>
           </select>
         </div>
       </div>

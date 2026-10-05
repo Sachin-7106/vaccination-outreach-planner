@@ -77,12 +77,12 @@ class PlanComparisonResponse(BaseModel):
 
 class ReviewRequest(BaseModel):
     recommendation_id: str
-    reviewer_id: str = "P.Officer-402"
-    reviewer_role: str = "Public Health Reviewer"
     decision: str  # ACCEPTED, MODIFIED, REJECTED, OVERRIDDEN
     override_reason: Optional[str] = None
     modified_capacity: Optional[int] = None
     modified_travel_km: Optional[float] = None
+    reviewer_id: Optional[str] = "P.Officer-402"
+    reviewer_role: Optional[str] = "Public Health Reviewer"
 
 class ReviewResponse(BaseModel):
     review_id: str
@@ -103,3 +103,30 @@ class EvalMetricsResponse(BaseModel):
     areas_served_count: int
     risk_weighted_coverage_score: float
     travel_feasibility_rate: float
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: str
+    username: str
+    role: str
+    full_name: str
+
+class TokenData(BaseModel):
+    username: str
+    role: str
+
+class UserResponse(BaseModel):
+    user_id: str
+    username: str
+    role: str
+    full_name: str
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+

@@ -233,13 +233,46 @@ SEED_AREAS = [
     }
 ]
 
+from app.models.schema import Area, ServiceHistory, DiseaseRisk, MobilityPattern, OutreachSession, Recommendation, Review, User
+from app.core.auth import get_password_hash
+
+SEED_USERS = [
+    {
+        "user_id": "usr-admin-001",
+        "username": "admin",
+        "password": "AdminPass123!",
+        "role": "ADMIN",
+        "full_name": "System Administrator (Public Health Director)"
+    },
+    {
+        "user_id": "usr-clinician-001",
+        "username": "clinician",
+        "password": "ClinicianPass123!",
+        "role": "CLINICIAN",
+        "full_name": "Dr. Sarah Chen (Chief Outreach Clinician)"
+    }
+]
+
 def init_db_and_seed():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        # Check if already seeded
+        # Seed users if missing
+        if db.query(User).count() == 0:
+            for u in SEED_USERS:
+                db.add(User(
+                    user_id=u["user_id"],
+                    username=u["username"],
+                    hashed_password=get_password_hash(u["password"]),
+                    role=u["role"],
+                    full_name=u["full_name"],
+                    is_active=True
+                ))
+            db.commit()
+
+        # Check if areas already seeded
         if db.query(Area).count() > 0:
-            print("Database already contains seed data.")
+            print("Database areas already seeded.")
             return
 
         print("Seeding database with synthetic public health datasets...")

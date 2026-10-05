@@ -44,17 +44,20 @@ def fetch_enriched_areas_data(db: Session):
         })
     return areas_data
 
+from app.planner.optimizer import solve_outreach_allocation
+
 @router.post("/generate", response_model=List[RecommendationResponse])
 def generate_outreach_plan(req: PlanRequest, db: Session = Depends(get_db)):
     """
-    Generates a targeted seasonal outreach plan for the specified objective.
+    Generates a targeted seasonal outreach plan using a formal Integer Linear Programming (ILP) optimizer.
 
     Process Flow:
       1. Aggregates zone indicators across database tables.
       2. Computes priority scores using the selected planner engine (BASELINE, REACH, or RISK).
-      3. Evaluates hard/soft operational constraints (travel limits, session supply cap).
-      4. Generates 100% explainable human-readable factor score breakdowns.
-      5. Persists recommendation records to SQLite database for audit and human review.
+      3. Solves the constrained ILP allocation model (PuLP CBC Solver) for optimal session assignment.
+      4. Evaluates hard/soft operational constraints and flags advisories.
+      5. Generates 100% explainable human-readable factor score breakdowns.
+      6. Persists recommendation records to SQLite database for audit and human review.
     """
     areas_data = fetch_enriched_areas_data(db)
     area_lookup = {a["area_id"]: a for a in areas_data}
@@ -66,6 +69,23 @@ def generate_outreach_plan(req: PlanRequest, db: Session = Depends(get_db)):
     else:  # RISK_REDUCTION (default)
         scored = calculate_risk_scores(areas_data, v_risk=req.risk_weight_risk, v_gap=req.risk_weight_gap, v_mobility=req.risk_weight_mobility, v_pop=req.risk_weight_pop)
 
+    # Solve formal integer linear program
+    opt_result = solve_outreach_allocation(
+        areas_data=areas_data,
+        scored_items=scored,
+        num_sessions=req.num_sessions,
+        session_capacity=req.session_capacity,
+        max_travel_distance_km=req.max_travel_distance_km,
+        objective_type=req.objective,
+        reach_weight_pop=req.reach_weight_pop,
+        reach_weight_gap=req.reach_weight_gap,
+        reach_weight_access=req.reach_weight_access,
+        risk_weight_risk=req.risk_weight_risk,
+        risk_weight_gap=req.risk_weight_gap,
+        risk_weight_mobility=req.risk_weight_mobility,
+        risk_weight_pop=req.risk_weight_pop
+    )
+
     # Refresh recommendations for the requested planning period and objective
     db.query(Recommendation).filter(
         Recommendation.planning_period == req.planning_period,
@@ -73,15 +93,44 @@ def generate_outreach_plan(req: PlanRequest, db: Session = Depends(get_db)):
     ).delete()
 
     responses = []
-    for item in scored[:req.num_sessions]:
+    selected_allocations = opt_result.get("selected_allocations", [])
+
+    # If optimizer found optimal allocations, use them.
+    # If infeasible or no areas were selectable due to strict travel limits, fall back to scored items for reporting flags.
+    items_to_process = []
+    if selected_allocations:
+        for idx, alloc in enumerate(selected_allocations):
+            aid = alloc["area_id"]
+            items_to_process.append({
+                "area_id": aid,
+                "priority_score": alloc["priority_score"],
+                "rank": idx + 1,
+                "expected_reach_opt": alloc["expected_reach"],
+                "allocated_sessions": alloc["allocated_sessions"]
+            })
+    else:
+        for item in scored[:req.num_sessions]:
+            items_to_process.append({
+                "area_id": item["area_id"],
+                "priority_score": item["priority_score"],
+                "rank": item["rank"],
+                "expected_reach_opt": None,
+                "allocated_sessions": 0
+            })
+
+    for item in items_to_process:
         area_id = item["area_id"]
         area_dict = area_lookup[area_id]
 
-        hard_passed, flags, expected_reach = evaluate_constraints(
+        hard_passed, flags, eval_expected_reach = evaluate_constraints(
             area_dict, req.session_capacity, req.max_travel_distance_km
         )
 
+        expected_reach = item["expected_reach_opt"] if item["expected_reach_opt"] is not None else eval_expected_reach
         reason_struct = generate_recommendation_reason(area_dict, item, req.objective)
+        reason_struct["optimization_metadata"] = opt_result.get("optimization_metadata", {})
+        reason_struct["allocated_sessions"] = item["allocated_sessions"]
+
         rec_id = str(uuid.uuid4())
 
         rec_db = Recommendation(

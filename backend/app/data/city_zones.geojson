@@ -1,0 +1,269 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "AREA-01",
+      "properties": {
+        "area_id": "AREA-01",
+        "area_name": "Metro Central Corridor",
+        "zone_type": "High-Density Urban",
+        "distance_from_base_km": 3.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-74.0150, 40.7180],
+            [-73.9970, 40.7180],
+            [-73.9970, 40.7080],
+            [-74.0150, 40.7080],
+            [-74.0150, 40.7180]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-02",
+      "properties": {
+        "area_id": "AREA-02",
+        "area_name": "Northwood Hills Suburb",
+        "zone_type": "Suburban Low-Density",
+        "distance_from_base_km": 6.5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-73.9950, 40.7550],
+            [-73.9750, 40.7550],
+            [-73.9750, 40.7420],
+            [-73.9950, 40.7420],
+            [-73.9950, 40.7550]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-03",
+      "properties": {
+        "area_id": "AREA-03",
+        "area_name": "Riverside Industrial Dock",
+        "zone_type": "Industrial Worker Zone",
+        "distance_from_base_km": 9.1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-74.0550, 40.6960],
+            [-74.0340, 40.6960],
+            [-74.0340, 40.6820],
+            [-74.0550, 40.6820],
+            [-74.0550, 40.6960]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-04",
+      "properties": {
+        "area_id": "AREA-04",
+        "area_name": "Southside informal Settlement",
+        "zone_type": "Under-Served Settlement",
+        "distance_from_base_km": 11.4
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-73.9600, 40.6580],
+            [-73.9380, 40.6580],
+            [-73.9380, 40.6420],
+            [-73.9600, 40.6420],
+            [-73.9600, 40.6580]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-05",
+      "properties": {
+        "area_id": "AREA-05",
+        "area_name": "West Valley Transit Hub",
+        "zone_type": "Transit Corridor",
+        "distance_from_base_km": 5.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-74.0880, 40.7350],
+            [-74.0660, 40.7350],
+            [-74.0660, 40.7200],
+            [-74.0880, 40.7200],
+            [-74.0880, 40.7350]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-06",
+      "properties": {
+        "area_id": "AREA-06",
+        "area_name": "Highland Park Residential",
+        "zone_type": "Suburban Residential",
+        "distance_from_base_km": 8.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-73.9800, 40.7900],
+            [-73.9600, 40.7900],
+            [-73.9600, 40.7760],
+            [-73.9800, 40.7760],
+            [-73.9800, 40.7900]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-07",
+      "properties": {
+        "area_id": "AREA-07",
+        "area_name": "Eastside Railway Market",
+        "zone_type": "Mobile Vendor Settlement",
+        "distance_from_base_km": 7.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-73.9300, 40.7140],
+            [-73.9100, 40.7140],
+            [-73.9100, 40.6980],
+            [-73.9300, 40.6980],
+            [-73.9300, 40.7140]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-08",
+      "properties": {
+        "area_id": "AREA-08",
+        "area_name": "Old Town Commercial District",
+        "zone_type": "Urban Commercial",
+        "distance_from_base_km": 2.1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-74.0080, 40.7250],
+            [-73.9920, 40.7250],
+            [-73.9920, 40.7120],
+            [-74.0080, 40.7120],
+            [-74.0080, 40.7250]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-09",
+      "properties": {
+        "area_id": "AREA-09",
+        "area_name": "Pine Ridge Seasonal Camp",
+        "zone_type": "Migrant / Temporary Housing",
+        "distance_from_base_km": 16.5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-74.1300, 40.6200],
+            [-74.1100, 40.6200],
+            [-74.1100, 40.6040],
+            [-74.1300, 40.6040],
+            [-74.1300, 40.6200]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-10",
+      "properties": {
+        "area_id": "AREA-10",
+        "area_name": "Sunset District Waterfront",
+        "zone_type": "Mixed Residential/Tourism",
+        "distance_from_base_km": 4.9
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-74.0000, 40.7680],
+            [-73.9800, 40.7680],
+            [-73.9800, 40.7520],
+            [-74.0000, 40.7520],
+            [-74.0000, 40.7680]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-11",
+      "properties": {
+        "area_id": "AREA-11",
+        "area_name": "College Heights Campus",
+        "zone_type": "Student / High Mobility",
+        "distance_from_base_km": 14.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-73.9720, 40.8150],
+            [-73.9520, 40.8150],
+            [-73.9520, 40.8000],
+            [-73.9720, 40.8000],
+            [-73.9720, 40.8150]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AREA-12",
+      "properties": {
+        "area_id": "AREA-12",
+        "area_name": "Harbor View Agricultural Edge",
+        "zone_type": "Peri-Urban Agricultural",
+        "distance_from_base_km": 18.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-74.1700, 40.5880],
+            [-74.1500, 40.5880],
+            [-74.1500, 40.5720],
+            [-74.1700, 40.5720],
+            [-74.1700, 40.5880]
+          ]
+        ]
+      }
+    }
+  ]
+}

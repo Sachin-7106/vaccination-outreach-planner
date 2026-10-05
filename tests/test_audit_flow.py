@@ -1,15 +1,18 @@
 import pytest
-from app.models.schema import Recommendation, Review
+from app.models.schema import Recommendation, Review, User
 from app.api.reviews import submit_review
 from app.models.pydantic_models import ReviewRequest
 from fastapi import HTTPException
 
 def test_override_requires_justification(db_session):
-    """
-    Verifies that overriding a recommendation without documented justification (> 5 chars)
-    raises an HTTP 400 exception, while providing a valid reason succeeds and updates state.
-    """
-    # Setup candidate recommendation with hard constraint failure
+    admin_user = User(
+        user_id="usr-admin-test",
+        username="Test.Reviewer",
+        role="ADMIN",
+        full_name="System Admin",
+        is_active=True
+    )
+
     rec = Recommendation(
         recommendation_id="REC-TEST-99",
         area_id="AREA-01",
@@ -25,32 +28,29 @@ def test_override_requires_justification(db_session):
     db_session.add(rec)
     db_session.commit()
 
-    # Attempt override without reason -> should raise 400 HTTPException
     req_invalid = ReviewRequest(
         recommendation_id="REC-TEST-99",
         reviewer_id="Test.Reviewer",
-        reviewer_role="CLINICIAN",
+        reviewer_role="ADMIN",
         decision="OVERRIDDEN",
         override_reason=""
     )
     with pytest.raises(HTTPException) as exc_info:
-        submit_review(req_invalid, db_session)
+        submit_review(req_invalid, db_session, current_user=admin_user)
     assert exc_info.value.status_code == 400
     assert "justification" in exc_info.value.detail.lower()
 
-    # Submit valid override with mandatory justification
     req_valid = ReviewRequest(
         recommendation_id="REC-TEST-99",
         reviewer_id="Test.Reviewer",
-        reviewer_role="CLINICIAN",
+        reviewer_role="ADMIN",
         decision="OVERRIDDEN",
         override_reason="Authorized secondary mobile transit bus allocated"
     )
-    resp = submit_review(req_valid, db_session)
+    resp = submit_review(req_valid, db_session, current_user=admin_user)
     assert resp.decision == "OVERRIDDEN"
     assert resp.override_reason == "Authorized secondary mobile transit bus allocated"
 
-    # Verify database persistence
     db_rec = db_session.query(Recommendation).filter_by(recommendation_id="REC-TEST-99").first()
     assert db_rec.status == "OVERRIDDEN"
 

@@ -1,3 +1,5 @@
+import json
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
@@ -44,6 +46,40 @@ def list_areas(db: Session = Depends(get_db)):
             outflow_index=mobility.outflow_index if mobility else 0.0
         ))
     return result
+
+@router.get("/geojson")
+def get_areas_geojson(db: Session = Depends(get_db)):
+    """
+    Returns valid GeoJSON FeatureCollection representing synthetic city zone boundaries
+    enriched with live database risk, coverage, and demographic indicators.
+    """
+    geojson_path = os.path.join(os.path.dirname(__file__), "..", "data", "city_zones.geojson")
+    if not os.path.exists(geojson_path):
+        raise HTTPException(status_code=404, detail="City zones GeoJSON file not found.")
+
+    with open(geojson_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Enrich GeoJSON feature properties with live DB indicators
+    areas_list = list_areas(db)
+    area_dict = {a.area_id: a for a in areas_list}
+
+    for feature in data.get("features", []):
+        aid = feature.get("properties", {}).get("area_id")
+        if aid in area_dict:
+            a = area_dict[aid]
+            feature["properties"].update({
+                "population": a.population,
+                "eligible_population": a.eligible_population,
+                "accessibility_index": a.accessibility_index,
+                "vaccinated_count": a.vaccinated_count,
+                "vaccination_coverage": a.vaccination_coverage,
+                "seasonal_risk": a.seasonal_risk,
+                "emerging_risk": a.emerging_risk,
+                "mobility_index": a.mobility_index
+            })
+
+    return data
 
 @router.get("/{area_id}", response_model=AreaDetail)
 def get_area(area_id: str, db: Session = Depends(get_db)):
